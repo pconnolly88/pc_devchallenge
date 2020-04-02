@@ -6,84 +6,113 @@
         <b-button variant="primary" @click="readQuestions">Load Questions</b-button>
       </div>
     </div>
-    <div v-if="debug>90">{{stackResponse}}</div>
-    <section v-if="errorMsg.length">
-      <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
-      <p>Error: {{errorMsg}}</p>
+    <div v-if="debug>0 && haveAnswers">{{answerItems}}</div>
+    <div v-if="debug>90">{{questionsData}}</div>
+    <section v-if="questionsState.getError">
+      <p>Apologies! Currently not able to retrieve this information, please try back later</p>
+      <p>Error: {{questionsState.errorMsg}}</p>
     </section>
 
     <section v-else>
       <div v-if="loading">Loading...</div>
 
       <div v-else>
-        <section v-if="this.stackResponse != null">
+        <section v-if="haveQuestions">
           <div v-if="debug>0">
-           <p>{{responseTitle}}</p>
+           <p>{{questionsTitle}}</p>
          </div>
-         <b-table  responsive small striped hover table-variant=success
+         <b-table responsive small striped hover table-variant=success
                   selectable select-mode='single'
-                  :items=responseItems :fields=tableFields
+                  :items=questionItems :fields=tableFields
                   @row-selected="onRowSelected"
                   >
          </b-table>
-        </section>>
+         <div v-if="answersResponse != null">{{answersResponse}}</div>
+        </section>
       </div>
     </section>   
   </div>
 </template>
 
 <script>
+import { useStackApi, QUESTIONS_QUERY } from '../functions/stackAPI.js';
 
 export default {
   name: 'stackQuestions',
   props: {
-    msg: String
+    questionsState: null
   },
   data: function() {
     return {
-      stackResponse: null,
+      answersState: null,
+      //axiosResponse: null,
       debug: 1,
-      loading: false,
-      errorMsg: "",
-      stackURL: "https://api.stackexchange.com/2.2/search/advanced?" +
-        "order=desc&sort=activity&accepted=True&answers=2&site=stackoverflow",
+      selectedRow: null,
       tableFields: ['title', 'owner.display_name', 'answer_count']
     }
   },
   computed: {
-    responseTitle: function() {
-      return this.stackResponse == null ? "" : 
-                "quota_remaining= " + this.stackResponse.data.quota_remaining +
-                ", quota_max= " + this.stackResponse.data.quota_max +"."
+    haveQuestions: function() {
+        return this.questionsState != null
     },
-    responseItems: function() {
-      return this.stackResponse == null ? null : this.stackResponse.data.items;
-    }
-
+    loading: function() {
+      return this.haveQuestions ? this.questionsState.loading : false
+    },
+    questionsData: function() {
+      return this.haveQuestions ? this.questionsState.info : null
+    },
+    questionsTitle: function() {
+      return  this.haveQuestions ?  
+                "quota_remaining= " + this.questionsData.quota_remaining +
+                ", quota_max= " + this.questionsData.quota_max +"."
+                : ""
+    },
+    questionItems: function() {
+      return this.haveQuestions ? this.questionsData.items : null;
+    },
+    haveAnswers: function() {
+        return this.answersState != null
+    },
+    answersData: function() {
+      return this.haveAnswers ? this.answersState.info : null
+    },
+    answerItems: function() {
+      return this.haveAnswers ? this.answersData.items : null
+    },
+    questionId: function() {
+      return this.selectedRow != null ? this.selectedRow.question_id : -1
+    },
   },
   methods: {
     // read the first group of questions with multiple answers from stackoverflow.com
     readQuestions() {
-      var axios = require('axios')
-      this.loading = true;
-      this.errorMsg = "";
-      axios
-        .get(this.stackURL)
-        .then(response => (this.stackResponse = response))
-        .catch(error => {
-          console.log(error)
-          this.errorMsg = error
-        })
-        .finally(() => this.loading = false)
+      this.questionsState = useStackApi(QUESTIONS_QUERY);
     },
-    onRowSelected() {
+    // read the answers for the selected question
+    readAnswers() {
+      if (this.questionId != null) {
+        const Q_ANSWERS_SUFFIX = "/answers?order=desc&sort=activity";
+        const ANSWERS_SUFFIX = "/answers?order=desc&sort=activity";
 
+        var query = 'questions/' + this.questionId + Q_ANSWERS_SUFFIX;
+        // first read the answer ids for the question
+        var answerIdsState = useStackApi(query);
+        // then read the answer details 
+        if (answerIdsState != null) {
+          var commaIds = 
+            Array.prototype.map.call(answerIdsState.info.data.items, s => s.answer_id).toString(); // "A,B,C"
+          var ids = commaIds.replace(',', ';');      
+          query = "answers/" + ids + ANSWERS_SUFFIX;
+          this.answersState = useStackApi(query);
+        }
+      }
+    },
+ 
+    onRowSelected(row) {
+      this.selectedRow = row;
+      this.readAnswers();
     }
-  },
-  mounted: function() {
-    this.readQuestions()
   }
-
 }
 </script>
 

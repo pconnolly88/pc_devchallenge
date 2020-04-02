@@ -2,10 +2,10 @@
   <div id="app">
     <b-img left alt="Stack logo" height=45 class="m1"
       src="https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-logo.png?v=9c558ec15d8a"/>
-    <stackQuestions msg="Guess the Accepted Answer"/>
+    <stackQuestions :questionsState="state"/>
     <div class="navbar navbar-default navbar-fixed-bottom">
       <div class="container">
-        <p class="navbar-text pull-left">© 2020 - Site built by Paul Connolly (logo © stackoverflow)
+        <p class="navbar-text pull-left">© 2020 - site built by Paul Connolly (logo © stackoverflow)
            <a href="http://tinyurl.com/tbvalid" target="_blank" >HTML 5 Validation</a>
         </p>
       </div>
@@ -15,11 +15,25 @@
 
 <script>
 import stackQuestions from './components/stackQuestions.vue'
+import { useStackApi, QUESTIONS_QUERY } from './functions/stackAPI.js';
 
 export default {
   name: 'App',
   components: {
     stackQuestions
+  },
+  setup() {
+     const state = useStackApi(QUESTIONS_QUERY);
+      return { state };   
+  },
+  created() {
+    console.log("page created.")
+  },
+  mounted() {
+    console.log("page mounted");
+  },
+  updated() {
+    console.log("page updated")
   }
 }
 </script>
