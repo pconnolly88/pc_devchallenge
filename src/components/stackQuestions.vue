@@ -1,11 +1,12 @@
 <template>
   <div class="stackQuestions">
-    <h1>{{ msg }}</h1>
-    <div class="container"> 
+    <h1>Select a Question</h1>
+    <div v-if=false class="container"> 
       <div class="text-left"> 
         <b-button variant="primary" @click="readQuestions">Load Questions</b-button>
       </div>
     </div>
+    <div v-if="debug>90">{{stackResponse}}</div>
     <section v-if="errorMsg.length">
       <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
       <p>Error: {{errorMsg}}</p>
@@ -15,43 +16,38 @@
       <div v-if="loading">Loading...</div>
 
       <div v-else>
-        <b-card v-if="this.stackResponse != null"
-         :title=this.responseTitle
-         tag="article"
-         class="mb-6"
-        >
-         <div v-if="false">
-           {{stackResponse}}
+        <section v-if="this.stackResponse != null">
+          <div v-if="debug>0">
+           <p>{{responseTitle}}</p>
          </div>
-          <stackQuestion
-            v-for="question in this.responseItems"
-            :key= question.question_id
-            :question="question"
-          />
-        </b-card>
+         <b-table  responsive small striped hover table-variant=success
+                  selectable select-mode='single'
+                  :items=responseItems :fields=tableFields
+                  @row-selected="onRowSelected"
+                  >
+         </b-table>
+        </section>>
       </div>
     </section>   
   </div>
 </template>
 
 <script>
-import stackQuestion from './stackQuestion.vue'
 
 export default {
   name: 'stackQuestions',
-  components: {
-    stackQuestion
-  },
   props: {
     msg: String
   },
   data: function() {
     return {
       stackResponse: null,
+      debug: 1,
       loading: false,
       errorMsg: "",
       stackURL: "https://api.stackexchange.com/2.2/search/advanced?" +
-        "order=desc&sort=activity&accepted=True&answers=2&site=stackoverflow"
+        "order=desc&sort=activity&accepted=True&answers=2&site=stackoverflow",
+      tableFields: ['title', 'owner.display_name', 'answer_count']
     }
   },
   computed: {
@@ -68,16 +64,24 @@ export default {
   methods: {
     // read the first group of questions with multiple answers from stackoverflow.com
     readQuestions() {
-    var axios = require('axios')
-    axios
-      .get(this.stackURL)
-      .then(response => (this.stackResponse = response))
-      .catch(error => {
-        console.log(error)
-        this.errorMsg = error
-      })
-      .finally(() => this.loading = false)
+      var axios = require('axios')
+      this.loading = true;
+      this.errorMsg = "";
+      axios
+        .get(this.stackURL)
+        .then(response => (this.stackResponse = response))
+        .catch(error => {
+          console.log(error)
+          this.errorMsg = error
+        })
+        .finally(() => this.loading = false)
+    },
+    onRowSelected() {
+
     }
+  },
+  mounted: function() {
+    this.readQuestions()
   }
 
 }

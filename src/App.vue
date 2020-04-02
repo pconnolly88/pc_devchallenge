@@ -1,7 +1,15 @@
 <template>
   <div id="app">
-    <img alt="Stack logo" src="https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-icon.png?v=c78bd457575a"/>
-    <stackQuestions msg="Welcome to: Guess the Accepted Answer"/>
+    <b-img left alt="Stack logo" height=45 class="m1"
+      src="https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-logo.png?v=9c558ec15d8a"/>
+    <stackQuestions msg="Guess the Accepted Answer"/>
+    <div class="navbar navbar-default navbar-fixed-bottom">
+      <div class="container">
+        <p class="navbar-text pull-left">© 2020 - Site built by Paul Connolly (logo © stackoverflow)
+           <a href="http://tinyurl.com/tbvalid" target="_blank" >HTML 5 Validation</a>
+        </p>
+      </div>
+    </div> 
   </div>
 </template>
 
