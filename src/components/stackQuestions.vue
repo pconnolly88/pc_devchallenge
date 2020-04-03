@@ -129,7 +129,7 @@ export default {
       // ids: "",
       // query: "",
       //
-      debug: 0
+      debug: 55
     }
   },
   computed: {
@@ -239,8 +239,15 @@ export default {
     },
 
     onAnswerSelected(row) {
-      this.selectedA = row;
-      // is this the accepted answer?
+        this.selectedA = row;
+        if (row != null && row.length > 0) {
+        // is this the accepted answer?
+        var alertText = "Sorry: not this one";
+        if (row[0].is_accepted) {
+          alertText = "Correct!!";
+        }
+        alert(alertText);
+      }
     }
   }
 }
