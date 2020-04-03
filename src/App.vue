@@ -2,7 +2,7 @@
   <div id="app">
     <b-img left alt="Stack logo" height=45 class="m1"
       src="https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-logo.png?v=9c558ec15d8a"/>
-    <stackQuestions :questionsState="state"/>
+    <stackQuestions :qState="state"/>
     <div class="navbar navbar-default navbar-fixed-bottom">
       <div class="container">
         <p class="navbar-text pull-left">© 2020 - site built by Paul Connolly (logo © stackoverflow)
@@ -15,7 +15,7 @@
 
 <script>
 import stackQuestions from './components/stackQuestions.vue'
-import { useStackApi, QUESTIONS_QUERY } from './functions/stackAPI.js';
+import { useStackApi, QUESTIONS_QUERY } from './functions/stackAPI.js'
 
 export default {
   name: 'App',
