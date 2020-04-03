@@ -23,8 +23,8 @@ export default {
     stackQuestions
   },
   setup() {
-     const state = useStackApi(QUESTIONS_QUERY);
-      return { state };   
+    const state = useStackApi(QUESTIONS_QUERY);
+    return { state };   
   },
   created() {
     console.log("page created.")

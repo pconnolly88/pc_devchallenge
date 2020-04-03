@@ -22,22 +22,28 @@
             <div v-if="debug>0">
             <p>{{questionsTitle}}</p>
           </div>
-            <b-table responsive small striped hover table-variant=success
+            <b-table  head-variant="dark"
+                      responsive small striped hover  bordered outlined
+                      caption-top
+                      :footClone="questionFootClone"
+                      table-variant=success
                       selectable select-mode='single'
                       :items=questionItems :fields=questionFields
                       @row-selected="onQuestionSelected"
                       >
-            </b-table>
+                <template  v-slot:table-caption>
+                          <strong>{{questionCaption}}</strong>
+                </template>
+                <!-- A virtual column -->
+                <template v-slot:cell(index)="data">
+                  {{ data.index + 1 }}
+                </template> 
+             </b-table>
           </section>
         </div>
       </section>   
     </div>
 
-    <!-- answerIds - these have to read before the answeres.
-         There will be a "loading..." while we wait for this at times -->
-    <div v-if="answerIdsState != null">
-        <div v-if="answerIdsState.loading">Loading ids of the answers...</div>
-    </div>
     <!-- answers table -->
     <div v-if="answersState != null">
       <div v-if="debug>50">{{answersData}}</div>
@@ -50,11 +56,24 @@
         <div v-if="answersState.loading">Loading the answers...</div>
         <div v-else>
           <section v-if="haveAnswers"> 
-            <b-table responsive small striped hover table-variant=light
+            <b-table  head-variant="dark"
+                      responsive="sm" small striped hover bordered outlined
+                      footClone caption-top
+                      table-variant=info
                       selectable select-mode='single'
                       :items=answerItems :fields=answerFields
                       @row-selected="onAnswerSelected"
                       >
+              <template v-slot:table-caption><strong>{{answerCaption}}</strong>
+              </template>
+              <!-- A virtual column -->
+              <template v-slot:cell(index)="data">
+                {{ data.index + 1 }}
+              </template> 
+              <!-- custom formatting for answer body -->
+              <template v-slot:cell(body)="data"> 
+                <p class="text-sm-left" v-html="data.value"></p>
+              </template>
             </b-table>
           </section>
         </div>
@@ -73,6 +92,8 @@ const QUESTIONS = "questions/";
 const ANSWERS = "answers/";
 const QUERY_SUFFIX = "?order=desc&sort=activity&filter=withbody";
 const ANSWERS_SUFFIX = "/answers" + QUERY_SUFFIX;
+const QUESTION_CAPTIONS = ["   Select a Question to see its answers",
+                          "   Selected Question" ];
 
 export default {
   name: 'stackQuestions',
@@ -81,19 +102,32 @@ export default {
   }, 
   data: function() {
     return {
-      heading: "Select a Question",
+      heading: "Guess the Accepted Answer",
       qStateLocal: null,
       selectedQ: null,
-      questionFields: ['title', 'owner.display_name', 'answer_count'],
+      questionFields: [
+                        'index',  // virtual column that doesn't exist in item
+                        {key: 'title', label: 'Question'}, 
+                        {key: 'owner.display_name', label: 'Author' },
+                        'answer_count'
+                      ],
       answerIdsState: null,
       answerIdsResp: null,
       answersState: null,
-      answerFields: ['body', 'owner.display_name', 'score'],
+      answerFields: [
+                      'index',  // virtual column that doesn't exist in item
+                      {key: 'body', label: 'Answer'},
+                      {key: 'owner.display_name', label: 'Author'},
+                       'score'
+                       ],
       selectedA: null,
       acceptedA: null,
+      questionFootClone: true,
+      questionCaption: QUESTION_CAPTIONS[0],
+      answerCaption: "   To guess the accepted answer: select an answer",
       //tmp
-      ids: "",
-      query: "",
+      // ids: "",
+      // query: "",
       //
       debug: 0
     }
@@ -134,10 +168,7 @@ export default {
               this.selectedQ[0].question_id : -1
     },
   },
-  // lifecycle events
-  updated: {
-    
-  },
+ 
   methods: {
     // read the first group of questions with multiple answers from stackoverflow.com
     readQuestions() {
@@ -157,7 +188,8 @@ export default {
         axios.get(STACK_BASE_URL + query + STACK_END_URL)
           .then(response => {
             this.answerIdsResp = response;
-            console.log("stackApi: response:" + response);
+            if (this.debug > 0)
+              console.log("stackApi: response:" + response);
             if (response.status > 299) {
                 console.error("stackApi failed.  Status: " + response.status)
             }
@@ -184,8 +216,8 @@ export default {
 
     readAnswers(ids) {
       if (ids.length > 0) {
-          this.query = ANSWERS + ids + QUERY_SUFFIX;
-          this.answersState = useStackApi(this.query);
+          const query = ANSWERS + ids + QUERY_SUFFIX;
+          this.answersState = useStackApi(query);
       }
     },
     
@@ -200,7 +232,9 @@ export default {
     onQuestionSelected(row) {
       this.selectedQ = row;
       this.singleQuestion();
-      this.heading = "Guess the accepted answer";
+      //this.heading = "Guess the accepted answer";
+      this.questionFootClone = false;
+      this.questionCaption = QUESTION_CAPTIONS[1];
       this.findAnswers();
     },
 
