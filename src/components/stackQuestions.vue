@@ -9,31 +9,41 @@
 
     <!-- questions table -->
     <div v-if="questionsState != null">
-      <div v-if="debug>90">{{questionsData}}</div>
+      <div v-if="debug>90">{{questionsData}}</div>    <!-- dump of question data for reference -->
+      <!-- read of stackoverflow questions failed -->
       <section v-if="questionsState.failed">
         <p>Apologies! Currently not able to retrieve questions, please try back later</p>
         <p>Error: {{questionsState.error}}</p>
       </section>
 
-      <section v-else>
+      <section v-else>  <!-- still progress or successful -->
         <div v-if="questionsState.loading">Loading...</div>
         <div v-else>
           <section v-if="haveQuestions">
             <div v-if="debug>0">
-            <p>{{questionsTitle}}</p>
-          </div>
-            <b-table  head-variant="dark"
+              <p>{{quotaStatus}}</p>   <!-- shows quota remaining -->
+            </div>
+
+            <b-row>
+              <b-col v-if="haveAnswers" lg="4" class="pb-2">
+                <b-button size="sm" @click="reloadQuestions">
+                    Reload Questions
+                </b-button>
+              </b-col>
+              <b-col ><h4>{{questionCaption}}</h4></b-col>
+            </b-row>
+            <b-table  ref="questions" head-variant="dark"
                       responsive small striped hover  bordered outlined
-                      caption-top
                       :footClone="questionFootClone"
                       table-variant=success
                       selectable select-mode='single'
                       :items=questionItems :fields=questionFields
                       @row-selected="onQuestionSelected"
                       >
-                <template  v-slot:table-caption>
-                          <strong>{{questionCaption}}</strong>
-                </template>
+                <!--
+                <template  class="text-md-left" v-slot:table-caption>
+                    <strong>{{questionCaption}}</strong>
+                </template>   -->
                 <!-- A virtual column -->
                 <template v-slot:cell(index)="data">
                   {{ data.index + 1 }}
@@ -44,8 +54,12 @@
       </section>   
     </div>
 
-    <!-- answers table -->
+    <!-- answers table - show when a question is selected -->
     <div v-if="answersState != null">
+      <!-- Info modal - show when an answer is selected -->
+      <b-modal :id="checkModal.id" :title="checkModal.title" ok-only @hide="resetCheckModal">
+        <pre>{{ checkModal.contents }}</pre>
+      </b-modal> 
       <div v-if="debug>50">{{answersData}}</div>
       <section v-if="answersState.failed">
         <p>Apologies! Currently not able to retrieve the answers, please try back later</p>
@@ -56,16 +70,25 @@
         <div v-if="answersState.loading">Loading the answers...</div>
         <div v-else>
           <section v-if="haveAnswers"> 
-            <b-table  head-variant="dark"
+            <b-row>
+              <b-col v-if="answersState" lg="4" class="pb-2">
+                  <b-button size="sm" @click="showAccepted">
+                    Show Accepted Answer
+                  </b-button>
+              </b-col>
+              <b-col lg="4" ><h4>{{answerCaption}}</h4></b-col>
+            </b-row>
+            <b-table  ref="answers" head-variant="dark"
                       responsive="sm" small striped hover bordered outlined
-                      footClone caption-top
+                      footClone
                       table-variant=info
                       selectable select-mode='single'
                       :items=answerItems :fields=answerFields
                       @row-selected="onAnswerSelected"
                       >
-              <template v-slot:table-caption><strong>{{answerCaption}}</strong>
-              </template>
+              <!--
+              <template v-slot:table-caption><strong></strong>
+              </template>  -->
               <!-- A virtual column -->
               <template v-slot:cell(index)="data">
                 {{ data.index + 1 }}
@@ -84,16 +107,17 @@
 </template>
 
 <script>
-import {QUESTIONS_QUERY, STACK_BASE_URL, STACK_END_URL,
-        useStackApi} from '../functions/stackAPI.js';
-import axios from 'axios';
+import {QUESTIONS_QUERY, 
+        //STACK_BASE_URL, STACK_END_URL,
+        useStackApi, stackApiPromise} from '../functions/stackAPI.js';
+//import axios from 'axios';
 
 const QUESTIONS = "questions/";
 const ANSWERS = "answers/";
 const QUERY_SUFFIX = "?order=desc&sort=activity&filter=withbody";
 const ANSWERS_SUFFIX = "/answers" + QUERY_SUFFIX;
-const QUESTION_CAPTIONS = ["   Select a Question to see its answers",
-                          "   Selected Question" ];
+const QUESTION_CAPTIONS = ["Select a question to see its answers",
+                          "Selected Question" ];
 
 export default {
   name: 'stackQuestions',
@@ -111,7 +135,6 @@ export default {
                         {key: 'owner.display_name', label: 'Author' },
                         'answer_count'
                       ],
-      answerIdsState: null,
       answerIdsResp: null,
       answersState: null,
       answerFields: [
@@ -121,15 +144,20 @@ export default {
                        'score'
                        ],
       selectedA: null,
-      acceptedA: null,
       questionFootClone: true,
       questionCaption: QUESTION_CAPTIONS[0],
-      answerCaption: "   To guess the accepted answer: select an answer",
+      answerCaption: "Make you selection",
+      checkModal: {
+          id: 'guess-check',
+          title: 'Guess Check',
+          contents: ''
+        },
       //tmp
+      aTable: null,
       // ids: "",
       // query: "",
       //
-      debug: 55
+      debug: 0
     }
   },
   computed: {
@@ -145,7 +173,7 @@ export default {
     questionsData: function() {
       return this.haveQuestions ? this.questionsState.info : null
     },
-    questionsTitle: function() {
+    quotaStatus: function() {
       return  this.haveQuestions ?  
                 "quota_remaining= " + this.questionsData.quota_remaining +
                 ", quota_max= " + this.questionsData.quota_max +"."
@@ -185,7 +213,8 @@ export default {
         var query = QUESTIONS + this.questionId + ANSWERS_SUFFIX;
         // cannot figure out how to get this work any pretty way -so need local axios
 //        const axios = require('axios');
-        axios.get(STACK_BASE_URL + query + STACK_END_URL)
+        //axios.get(STACK_BASE_URL + query + STACK_END_URL)
+        stackApiPromise(query)
           .then(response => {
             this.answerIdsResp = response;
             if (this.debug > 0)
@@ -229,8 +258,8 @@ export default {
       }
     },
  
-    onQuestionSelected(row) {
-      this.selectedQ = row;
+    onQuestionSelected(item/*, index, event*/) {
+      this.selectedQ = item;
       this.singleQuestion();
       //this.heading = "Guess the accepted answer";
       this.questionFootClone = false;
@@ -238,17 +267,45 @@ export default {
       this.findAnswers();
     },
 
-    onAnswerSelected(row) {
-        this.selectedA = row;
-        if (row != null && row.length > 0) {
+    onAnswerSelected(item, /*index, event*/) {
+        this.selectedA = item;
+        if (item != null && item.length > 0) {
         // is this the accepted answer?
-        var alertText = "Sorry: not this one";
-        if (row[0].is_accepted) {
-          alertText = "Correct!!";
+        var msg = "undefined";
+        if (item[0].is_accepted) {
+          const index = this.answerItems.findIndex(a => a.is_accepted)
+          msg = "Nailed It!! Answer " + (index+1).toString() + " is the accepted answer."
         }
-        alert(alertText);
+        else{
+          const index = this.answerItems.findIndex(a => a.answer_id == item[0].answer_id)
+          msg = "Sorry: Answer " + (index+1).toString() + " has NOT been accepted."
+        }
+        this.checkModal.contents = msg
+        this.$root.$emit('bv::show::modal', this.checkModal.id)
+      }
+    },
+
+    resetCheckModal() {
+      this.checkModal.contents = ''
+    },
+
+    reloadQuestions() {
+      this.answersState = null;
+      this.selectedA = null;
+      this.selectedQ = null;
+      this.questionCaption = QUESTION_CAPTIONS[0];
+      this.readQuestions();
+    },
+
+    showAccepted() {
+      if (this.haveAnswers) {
+        this.aTable = this.$refs.answers;
+        var items = this.aTable.items;
+        const acceptedIndex = items.findIndex(item => item.is_accepted);
+        this.$refs.answers.selectRow(acceptedIndex);
       }
     }
+    
   }
 }
 </script>

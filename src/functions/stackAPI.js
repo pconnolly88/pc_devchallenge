@@ -12,8 +12,9 @@ const useStackApi = (api) => {
     loading: true,
     failed: false
   });
+    var query = STACK_BASE_URL + api + STACK_END_URL;
     axios
-      .get(STACK_BASE_URL + api + STACK_END_URL)
+      .get(query)
       .then(response => {
         console.log("useStackApi: response:" + response);
         if (response.status > 299) {
@@ -34,9 +35,10 @@ const useStackApi = (api) => {
 
 const stackApiPromise = (api) => {
     const axios = require('axios');
-    // return the promise so the caller can wait for competion with .then etc
+    // return the promise so the caller can wait for completion with .then etc
+    var query = STACK_BASE_URL + api + STACK_END_URL;
     return (
-        axios.get(STACK_BASE_URL + api + STACK_END_URL)
+        axios.get(query)
     );
 };
 
