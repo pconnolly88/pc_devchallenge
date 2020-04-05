@@ -8,7 +8,7 @@
     
     <div class="navbar navbar-default navbar-fixed-bottom">
       <div class="container">
-        <p class="navbar-text pull-left">© 2020 - site built by Paul Connolly (logo © stackoverflow)
+        <p class="navbar-text pull-left">© 2020 - site built by <strong>{{author}}</strong> (logo © stackoverflow)
            <a href="http://tinyurl.com/tbvalid" target="_blank" >HTML 5 Validation</a>
         </p>
       </div>
@@ -24,6 +24,11 @@ export default {
   name: 'App',
   components: {
     stackQuestions
+  },
+  data: function() {
+    return {
+      author: "Noob Design LLC"
+    }
   },
   setup() {
     const state = useStackApi(QUESTIONS_QUERY);

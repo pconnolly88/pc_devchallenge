@@ -25,12 +25,12 @@
             </div>
 
             <b-row>
-              <b-col v-if="haveAnswers" lg="4" class="pb-2">
+              <b-col lg="2" class="pb-2">
                 <b-button size="sm" @click="reloadQuestions">
                     Reload Questions
                 </b-button>
               </b-col>
-              <b-col ><h4>{{questionCaption}}</h4></b-col>
+              <b-col lg="4" test-align="left" ><h4>{{questionCaption}}</h4></b-col>
             </b-row>
             <b-table  ref="questions" head-variant="dark"
                       responsive small striped hover  bordered outlined
@@ -71,7 +71,7 @@
         <div v-else>
           <section v-if="haveAnswers"> 
             <b-row>
-              <b-col v-if="answersState" lg="4" class="pb-2">
+              <b-col lg="2" class="pb-2">
                   <b-button size="sm" @click="showAccepted">
                     Show Accepted Answer
                   </b-button>
@@ -146,7 +146,7 @@ export default {
       selectedA: null,
       questionFootClone: true,
       questionCaption: QUESTION_CAPTIONS[0],
-      answerCaption: "Make you selection",
+      answerCaption: "Select an answer",
       checkModal: {
           id: 'guess-check',
           title: 'Guess Check',
@@ -302,6 +302,8 @@ export default {
         this.aTable = this.$refs.answers;
         var items = this.aTable.items;
         const acceptedIndex = items.findIndex(item => item.is_accepted);
+        // make sure the row is in view - not sure how to find the javaScript element
+        //items[acceptedIndex].scrollIntoView();
         this.$refs.answers.selectRow(acceptedIndex);
       }
     }
