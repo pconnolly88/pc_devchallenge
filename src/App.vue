@@ -1,18 +1,20 @@
 <template>
-  <div id="app">
-    <b-img left alt="Stack logo" height=45 class="m1"
-      src="https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-logo.png?v=9c558ec15d8a"/>
+  <div id="app" class="container">
+    <header>
+      <b-img left alt="Stack logo" height=45 class="m1"
+        src="https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-logo.png?v=9c558ec15d8a"/>
+    </header>
     <!-- couldn't get the question to populate itself in the component - so pass in
          the initial list.  Certainly I am missing something? -->  
-    <stackQuestions :qState="state"/>
+   <main>
+      <stackQuestions :qState="state"/>
+   </main>
     
-    <div class="navbar navbar-default navbar-fixed-bottom">
-      <div class="container">
-        <p class="navbar-text pull-left">© 2020 - site built by <strong>{{author}}</strong> (logo © stackoverflow)
-           <a href="http://tinyurl.com/tbvalid" target="_blank" >HTML 5 Validation</a>
-        </p>
-      </div>
-    </div> 
+    <footer>
+      <p class="navbar-text pull-left">© 2020 - site built by <strong>{{author}}</strong> (logo © stackoverflow)
+        <a href="http://tinyurl.com/tbvalid" target="_blank" >HTML 5 Validation</a>
+      </p>
+    </footer>
   </div>
 </template>
 

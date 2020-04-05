@@ -6,7 +6,7 @@
         <b-button variant="primary" @click="readQuestions">Load Questions</b-button>
       </div>
     </div>
-
+    
     <!-- questions table -->
     <div v-if="questionsState != null">
       <div v-if="debug>90">{{questionsData}}</div>    <!-- dump of question data for reference -->
@@ -30,7 +30,7 @@
                     Reload Questions
                 </b-button>
               </b-col>
-              <b-col lg="4" test-align="left" ><h4>{{questionCaption}}</h4></b-col>
+              <b-col lg="5" class="pull-left"><h4>{{questionCaption}}</h4></b-col>
             </b-row>
             <b-table  ref="questions" head-variant="dark"
                       responsive small striped hover  bordered outlined
@@ -76,7 +76,7 @@
                     Show Accepted Answer
                   </b-button>
               </b-col>
-              <b-col lg="4" ><h4>{{answerCaption}}</h4></b-col>
+              <b-col lg="5" class="pull-left"><h4>{{answerCaption}}</h4></b-col>
             </b-row>
             <b-table  ref="answers" head-variant="dark"
                       responsive="sm" small striped hover bordered outlined
@@ -101,8 +101,7 @@
           </section>
         </div>
       </section> 
-    </div>
-    
+    </div> 
   </div>
 </template>
 
